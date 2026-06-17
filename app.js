@@ -118,6 +118,23 @@ class FrenchVocabularyApp {
       const voices = window.speechSynthesis.getVoices();
       const frenchVoice = voices.find(v => v.lang.startsWith('fr'));
       if (frenchVoice) utterance.voice = frenchVoice;
+
+      // 按钮短暂反馈，让用户知道正在发音
+      this.isPronouncing = true;
+      this.pronounceBtn.textContent = '🔊 发音中...';
+      this.pronounceBtn.disabled = true;
+
+      utterance.onend = () => {
+        this.isPronouncing = false;
+        this.pronounceBtn.textContent = '🔊 发音';
+        this.pronounceBtn.disabled = false;
+      };
+      utterance.onerror = () => {
+        this.isPronouncing = false;
+        this.pronounceBtn.textContent = '🔊 发音';
+        this.pronounceBtn.disabled = false;
+      };
+
       window.speechSynthesis.speak(utterance);
       return;
     }
@@ -133,14 +150,11 @@ class FrenchVocabularyApp {
     return voices.length > 0 && voices.some(v => v.lang.startsWith('fr'));
   }
 
-  // Google Translate TTS 降级播放
+  // TTS 降级播放：优先有道词典（国内可用），Google 兜底
   pronounceViaAudio(text) {
     this.isPronouncing = true;
     this.pronounceBtn.textContent = '🔊 发音中...';
     this.pronounceBtn.disabled = true;
-
-    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&q='
-      + encodeURIComponent(text) + '&tl=fr&client=tw-ob';
 
     // 每次创建新 Audio 对象，避免复用导致事件丢失
     if (this.audioPlayer) {
@@ -151,7 +165,7 @@ class FrenchVocabularyApp {
     this.audioPlayer = new Audio();
 
     const safeReset = () => {
-      if (!this.isPronouncing) return; // 防止重复恢复
+      if (!this.isPronouncing) return;
       this.isPronouncing = false;
       this.pronounceBtn.textContent = '🔊 发音';
       this.pronounceBtn.disabled = false;
@@ -161,25 +175,42 @@ class FrenchVocabularyApp {
       }
     };
 
-    // 超时兜底：10 秒后强制恢复按钮，防止事件丢失导致永远灰标
+    // 超时兜底：8 秒后强制恢复按钮
     this.pronounceTimeout = setTimeout(() => {
-      console.warn('TTS 超时，强制恢复按钮');
       safeReset();
-    }, 10000);
+    }, 8000);
+
+    // 有道词典 TTS（国内可用，无需 API Key）
+    const youdaoUrl = 'https://dict.youdao.com/dictvoice?audio='
+      + encodeURIComponent(text) + '&le=fr&type=0';
+
+    // Google TTS 兜底（海外可用）
+    const googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&q='
+      + encodeURIComponent(text) + '&tl=fr&client=tw-ob';
+
+    let triedFallback = false;
+
+    const tryFallback = () => {
+      if (triedFallback) return;
+      triedFallback = true;
+      this.audioPlayer.src = googleUrl;
+      this.audioPlayer.load();
+      this.audioPlayer.play().catch(() => {
+        safeReset();
+      });
+    };
 
     this.audioPlayer.onended = safeReset;
     this.audioPlayer.onerror = () => {
-      console.warn('TTS 音频加载失败，请检查网络');
-      safeReset();
+      tryFallback();
     };
     this.audioPlayer.onabort = safeReset;
 
-    this.audioPlayer.src = url;
+    this.audioPlayer.src = youdaoUrl;
     this.audioPlayer.load();
 
     this.audioPlayer.play().catch(() => {
-      console.warn('TTS 自动播放被阻止');
-      safeReset();
+      tryFallback();
     });
   }
 
