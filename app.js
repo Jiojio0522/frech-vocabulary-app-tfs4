@@ -1,5 +1,15 @@
 // 法语单词背诵应用主逻辑
 
+// UTF-8 字符串转 Base64（支持法语特殊字符如 é、è、ç 等）
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 class FrenchVocabularyApp {
   constructor() {
     this.allWords = flattenVocabulary();
@@ -150,7 +160,7 @@ class FrenchVocabularyApp {
     return voices.length > 0 && voices.some(v => v.lang.startsWith('fr'));
   }
 
-  // TTS 降级播放：优先有道词典（国内可用），Google 兜底
+  // TTS 降级播放：法语助手 API（国内可用，真人发音）
   pronounceViaAudio(text) {
     this.isPronouncing = true;
     this.pronounceBtn.textContent = '🔊 发音中...';
@@ -180,37 +190,19 @@ class FrenchVocabularyApp {
       safeReset();
     }, 8000);
 
-    // 有道词典 TTS（国内可用，无需 API Key）
-    const youdaoUrl = 'https://dict.youdao.com/dictvoice?audio='
-      + encodeURIComponent(text) + '&le=fr&type=0';
-
-    // Google TTS 兜底（海外可用）
-    const googleUrl = 'https://translate.google.com/translate_tts?ie=UTF-8&q='
-      + encodeURIComponent(text) + '&tl=fr&client=tw-ob';
-
-    let triedFallback = false;
-
-    const tryFallback = () => {
-      if (triedFallback) return;
-      triedFallback = true;
-      this.audioPlayer.src = googleUrl;
-      this.audioPlayer.load();
-      this.audioPlayer.play().catch(() => {
-        safeReset();
-      });
-    };
-
     this.audioPlayer.onended = safeReset;
     this.audioPlayer.onerror = () => {
-      tryFallback();
+      safeReset();
     };
     this.audioPlayer.onabort = safeReset;
 
-    this.audioPlayer.src = youdaoUrl;
+    // 法语助手 TTS API（真人发音、国内直连、无需 Key）
+    // langid=3 表示法语，txt=QYN + UTF-8 转 base64
+    const base64 = utf8ToBase64(text);
+    this.audioPlayer.src = 'https://api.frdic.com/api/v2/speech/speakweb?langid=3&txt=QYN' + base64;
     this.audioPlayer.load();
-
     this.audioPlayer.play().catch(() => {
-      tryFallback();
+      safeReset();
     });
   }
 
