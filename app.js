@@ -142,27 +142,44 @@ class FrenchVocabularyApp {
     const url = 'https://translate.google.com/translate_tts?ie=UTF-8&q='
       + encodeURIComponent(text) + '&tl=fr&client=tw-ob';
 
-    if (!this.audioPlayer) {
-      this.audioPlayer = new Audio();
+    // 每次创建新 Audio 对象，避免复用导致事件丢失
+    if (this.audioPlayer) {
+      this.audioPlayer.pause();
+      this.audioPlayer.removeAttribute('src');
+      this.audioPlayer = null;
     }
+    this.audioPlayer = new Audio();
 
-    const reset = () => {
+    const safeReset = () => {
+      if (!this.isPronouncing) return; // 防止重复恢复
       this.isPronouncing = false;
       this.pronounceBtn.textContent = '🔊 发音';
       this.pronounceBtn.disabled = false;
+      if (this.pronounceTimeout) {
+        clearTimeout(this.pronounceTimeout);
+        this.pronounceTimeout = null;
+      }
     };
+
+    // 超时兜底：10 秒后强制恢复按钮，防止事件丢失导致永远灰标
+    this.pronounceTimeout = setTimeout(() => {
+      console.warn('TTS 超时，强制恢复按钮');
+      safeReset();
+    }, 10000);
+
+    this.audioPlayer.onended = safeReset;
+    this.audioPlayer.onerror = () => {
+      console.warn('TTS 音频加载失败，请检查网络');
+      safeReset();
+    };
+    this.audioPlayer.onabort = safeReset;
 
     this.audioPlayer.src = url;
-    this.audioPlayer.onended = reset;
-    this.audioPlayer.onerror = () => {
-      reset();
-      // Google TTS 偶尔会被墙，静默失败，不弹窗打扰用户
-      console.warn('TTS 音频加载失败，请检查网络');
-    };
+    this.audioPlayer.load();
 
     this.audioPlayer.play().catch(() => {
-      reset();
       console.warn('TTS 自动播放被阻止');
+      safeReset();
     });
   }
 
