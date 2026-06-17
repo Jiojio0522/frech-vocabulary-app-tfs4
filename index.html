@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>法语专四核心词汇背诵</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>法语专四核心词汇</h1>
+      <p class="subtitle">50天密集突击专四必背</p>
+    </header>
+
+    <div class="controls">
+      <div class="group-selector">
+        <label for="groupSelect">选择分组：</label>
+        <select id="groupSelect">
+          <option value="all">全部词汇</option>
+          <option value="Jour 1">Jour 1</option>
+          <option value="Jour 2">Jour 2</option>
+          <option value="Jour 3">Jour 3</option>
+          <option value="Jour 4">Jour 4</option>
+          <option value="Jour 5">Jour 5</option>
+          <option value="Jour 6">Jour 6</option>
+          <option value="Jour 7">Jour 7</option>
+          <option value="Jour 8">Jour 8</option>
+          <option value="Jour 9">Jour 9</option>
+          <option value="Jour 10">Jour 10</option>
+          <option value="Jour 11">Jour 11</option>
+          <option value="Jour 12">Jour 12</option>
+          <option value="Jour 13">Jour 13</option>
+          <option value="Jour 14">Jour 14</option>
+          <option value="Jour 15">Jour 15</option>
+          <option value="Jour 16">Jour 16</option>
+          <option value="Jour 17">Jour 17</option>
+          <option value="Jour 18">Jour 18</option>
+          <option value="Jour 19">Jour 19</option>
+          <option value="Jour 20">Jour 20</option>
+          <option value="Jour 21">Jour 21</option>
+          <option value="Jour 22">Jour 22</option>
+          <option value="Jour 23">Jour 23</option>
+          <option value="Jour 24">Jour 24</option>
+          <option value="Jour 25">Jour 25</option>
+          <option value="Jour 26">Jour 26</option>
+          <option value="Jour 27">Jour 27</option>
+          <option value="Jour 28">Jour 28</option>
+          <option value="Jour 29">Jour 29</option>
+          <option value="Jour 30">Jour 30</option>
+          <option value="Jour 31">Jour 31</option>
+          <option value="Jour 32">Jour 32</option>
+          <option value="Jour 33">Jour 33</option>
+          <option value="Jour 34">Jour 34</option>
+          <option value="Jour 35">Jour 35</option>
+          <option value="Jour 36">Jour 36</option>
+          <option value="Jour 37">Jour 37</option>
+          <option value="Jour 38">Jour 38</option>
+          <option value="Jour 39">Jour 39</option>
+          <option value="Jour 40">Jour 40</option>
+          <option value="Jour 41">Jour 41</option>
+          <option value="Jour 42">Jour 42</option>
+          <option value="Jour 43">Jour 43</option>
+          <option value="Jour 44">Jour 44</option>
+          <option value="Jour 45">Jour 45</option>
+          <option value="Jour 46">Jour 46</option>
+          <option value="Jour 47">Jour 47</option>
+          <option value="Jour 48">Jour 48</option>
+          <option value="Jour 49">Jour 49</option>
+          <option value="Jour 50">Jour 50</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flashcard-container">
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-front">
+          <div class="word-group" id="wordGroup"></div>
+          <div class="word-french" id="wordFrench"></div>
+          <div class="word-phonetic" id="wordPhonetic"></div>
+          <button class="pronounce-btn" id="pronounceBtn">
+            🔊 发音
+          </button>
+          <div class="hint">点击卡片查看中文释义</div>
+        </div>
+        <div class="flashcard-back">
+          <div class="word-chinese" id="wordChinese"></div>
+          <div class="word-french-back" id="wordFrenchBack"></div>
+          <div class="collocations-section" id="collocationsSection">
+            <div class="collocations-title">📖 固定搭配</div>
+            <div class="collocations-list" id="collocationsList"></div>
+          </div>
+          <div class="hint">点击卡片返回</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedback-buttons">
+      <button class="btn-strengthen" id="strengthenBtn">
+        📌 下次加强
+      </button>
+      <button class="btn-remembered" id="rememberedBtn">
+        ✅ 已记住
+      </button>
+    </div>
+
+    <div class="navigation">
+      <button class="nav-btn" id="prevBtn">← 上一个</button>
+      <button class="nav-btn" id="nextBtn">下一个 →</button>
+    </div>
+
+    <div class="progress-section">
+      <h3>学习进度</h3>
+      <div class="progress-stats">
+        <div class="stat-item">
+          <span class="stat-label">已记住：</span>
+          <span class="stat-value" id="rememberedCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">需加强：</span>
+          <span class="stat-value" id="strengthenCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">未学习：</span>
+          <span class="stat-value" id="unlearnedCount">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 祝贺弹窗 -->
+  <div class="congrats-overlay" id="congratsOverlay">
+    <div class="congrats-card" id="congratsCard">
+      <div class="congrats-emoji">🎉</div>
+      <div class="congrats-text">恭喜记住这组</div>
+      <div class="congrats-sub">再接再厉！</div>
+      <button class="congrats-btn" id="congratsDismiss">继续学习 →</button>
+    </div>
+  </div>
+
+  <script src="fem-lookup.js"></script>
+  <script src="vocabulary.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
