@@ -16,6 +16,11 @@ class FrenchVocabularyApp {
     // 祝贺弹窗：已弹过的分组不再重复
     this.congratulatedGroups = new Set();
 
+    // 语音合成降级：Android/鸿蒙无法语语音时用 Google TTS 音频
+    this.audioPlayer = null;
+    this.isPronouncing = false;
+    this.useAudioFallback = false;
+
     // 选为"全部词汇"的默认视图
     this.currentWords = [...this.allWords];
 
@@ -99,11 +104,14 @@ class FrenchVocabularyApp {
 
   pronounce() {
     const word = this.currentWords[this.currentIndex];
-    if (!word) return;
-    if ('speechSynthesis' in window) {
+    if (!word || this.isPronouncing) return;
+
+    // 阴阳性单词：将 "acteur,trice" 展开为 "acteur, actrice"
+    const pronounceText = word.french.includes(',') ? getPronounceText(word.french) : word.french;
+
+    // 优先尝试 Web Speech API（桌面浏览器）
+    if (!this.useAudioFallback && this.hasFrenchVoice()) {
       window.speechSynthesis.cancel();
-      // 阴阳性单词：将 "acteur,trice" 展开为 "acteur, actrice" 再发音
-      const pronounceText = word.french.includes(',') ? getPronounceText(word.french) : word.french;
       const utterance = new SpeechSynthesisUtterance(pronounceText);
       utterance.lang = 'fr-FR';
       utterance.rate = 0.8;
@@ -111,9 +119,51 @@ class FrenchVocabularyApp {
       const frenchVoice = voices.find(v => v.lang.startsWith('fr'));
       if (frenchVoice) utterance.voice = frenchVoice;
       window.speechSynthesis.speak(utterance);
-    } else {
-      alert('您的浏览器不支持语音合成功能');
+      return;
     }
+
+    // 降级方案：Google Translate TTS 音频（安卓/鸿蒙均可用）
+    this.pronounceViaAudio(pronounceText);
+  }
+
+  // 检测是否有法语语音（非空且含 fr-FR 或 fr 开头的语音）
+  hasFrenchVoice() {
+    if (!('speechSynthesis' in window)) return false;
+    const voices = window.speechSynthesis.getVoices();
+    return voices.length > 0 && voices.some(v => v.lang.startsWith('fr'));
+  }
+
+  // Google Translate TTS 降级播放
+  pronounceViaAudio(text) {
+    this.isPronouncing = true;
+    this.pronounceBtn.textContent = '🔊 发音中...';
+    this.pronounceBtn.disabled = true;
+
+    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&q='
+      + encodeURIComponent(text) + '&tl=fr&client=tw-ob';
+
+    if (!this.audioPlayer) {
+      this.audioPlayer = new Audio();
+    }
+
+    const reset = () => {
+      this.isPronouncing = false;
+      this.pronounceBtn.textContent = '🔊 发音';
+      this.pronounceBtn.disabled = false;
+    };
+
+    this.audioPlayer.src = url;
+    this.audioPlayer.onended = reset;
+    this.audioPlayer.onerror = () => {
+      reset();
+      // Google TTS 偶尔会被墙，静默失败，不弹窗打扰用户
+      console.warn('TTS 音频加载失败，请检查网络');
+    };
+
+    this.audioPlayer.play().catch(() => {
+      reset();
+      console.warn('TTS 自动播放被阻止');
+    });
   }
 
   markStrengthen() {
@@ -312,10 +362,28 @@ class FrenchVocabularyApp {
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-  // 预加载语音列表
+  let app;
+
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.getVoices();
+    // 监听语音列表加载完成
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      // 没有法语语音则启用音频降级
+      if (!voices.some(v => v.lang.startsWith('fr'))) {
+        app.useAudioFallback = true;
+      }
+    };
+    // 如果 voices 已同步加载（Firefox 等），直接判断
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0 && !voices.some(v => v.lang.startsWith('fr'))) {
+      // app 还没创建，先标记，创建后再设置
+    }
   }
 
-  new FrenchVocabularyApp();
+  app = new FrenchVocabularyApp();
+
+  // 再次检查法语语音
+  if (!app.hasFrenchVoice()) {
+    app.useAudioFallback = true;
+  }
 });
