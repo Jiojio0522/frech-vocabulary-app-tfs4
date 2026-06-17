@@ -197,9 +197,9 @@ class FrenchVocabularyApp {
     this.audioPlayer.onabort = safeReset;
 
     // 法语助手 TTS API（真人发音、国内直连、无需 Key）
-    // langid=3 表示法语，txt=QYN + UTF-8 转 base64
+    // langid=fr 表示法语（法语助手网站 body class="fr" 对应 fr，不是数字 3）
     const base64 = utf8ToBase64(text);
-    this.audioPlayer.src = 'https://api.frdic.com/api/v2/speech/speakweb?langid=3&txt=QYN' + base64;
+    this.audioPlayer.src = 'https://api.frdic.com/api/v2/speech/speakweb?langid=fr&txt=QYN' + base64;
     this.audioPlayer.load();
     this.audioPlayer.play().catch(() => {
       safeReset();
