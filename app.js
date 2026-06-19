@@ -1,6 +1,27 @@
 // 法语单词背诵应用主逻辑
 
-// UTF-8 字符串转 Base64（支持法语特殊字符如 é、è、ç 等）
+// ========== 禁用双击缩放 & 手势缩放 ==========
+// 阻止 iOS Safari 双击缩放
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
+
+// 阻止 iOS Safari 双指缩放
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
+
+// 阻止双击事件触发页面缩放
+document.addEventListener('dblclick', (e) => {
+  e.preventDefault();
+});
+
+// ========== UTF-8 转 Base64 ==========
 function utf8ToBase64(str) {
   const bytes = new TextEncoder().encode(str);
   let binary = '';

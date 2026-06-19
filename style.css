@@ -2,6 +2,14 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 body {
@@ -12,6 +20,8 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 .container {
@@ -428,5 +438,34 @@ header h1 {
   .controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .container {
+    padding: 16px;
+  }
+
+  .flashcard-front,
+  .flashcard-back {
+    padding: 20px;
+  }
+
+  .word-french {
+    font-size: 32px;
+  }
+
+  .pronounce-btn {
+    padding: 10px 25px;
+    font-size: 15px;
+  }
+
+  .btn-strengthen,
+  .btn-remembered {
+    padding: 13px;
+    font-size: 15px;
+  }
+
+  .nav-btn {
+    padding: 10px;
+    font-size: 15px;
   }
 }
