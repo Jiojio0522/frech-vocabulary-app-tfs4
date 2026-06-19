@@ -357,12 +357,32 @@ class FrenchVocabularyApp {
     }).join('');
   }
 
+  // 判断一个单词是否已"真正记住"：
+  //   - 从未标记"需加强"的词：remembered > 0
+  //   - 标记过"需加强"的词：需要累计点击"已记住" 3 次才算真正记住
+  isMastered(word) {
+    if (word.strengthen === 0) {
+      // 普通词：点一次"已记住"即可
+      return word.remembered > 0;
+    } else {
+      // 需加强词：需点满 3 次"已记住"才算掌握
+      return word.remembered >= 3;
+    }
+  }
+
   renderProgress() {
     // 基于当前分组（currentWords）实时统计，切换分组时自然同步
+    // 规则：
+    //   已记住 = isMastered(w) 为 true 的单词
+    //   需加强 = 标记过"需加强"且尚未 isMastered 的单词
+    //   未学习 = totalShown === 0 的单词
     let remembered = 0, strengthen = 0, unlearned = 0;
     for (const w of this.currentWords) {
-      if (w.remembered > 0) remembered++;
-      if (w.strengthen > 0) strengthen++;
+      if (this.isMastered(w)) {
+        remembered++;
+      } else if (w.strengthen > 0) {
+        strengthen++;
+      }
       if (w.totalShown === 0) unlearned++;
     }
     this.rememberedCountSpan.textContent = remembered;
@@ -370,7 +390,7 @@ class FrenchVocabularyApp {
     this.unlearnedCountSpan.textContent = unlearned;
   }
 
-  // 检查当前分组是否全部标记为"已记住"
+  // 检查当前分组"已记住"数量是否等于分组词汇总数
   checkGroupComplete() {
     const group = this.groupSelect.value;
     // 只在选中具体分组时弹出，"全部词汇"不弹
@@ -382,9 +402,9 @@ class FrenchVocabularyApp {
     const groupWords = this.groupIndex.get(group);
     if (!groupWords || groupWords.length === 0) return;
 
-    // 检查是否全部已记住（remembered > 0）
-    const allRemembered = groupWords.every(w => w.remembered > 0);
-    if (allRemembered) {
+    // 触发条件：当前分组中 isMastered 的词数 = 分组总词数
+    const masteredCount = groupWords.filter(w => this.isMastered(w)).length;
+    if (masteredCount === groupWords.length) {
       this.congratulatedGroups.add(group);
       // 稍微延迟弹出，让用户先看到最后一个单词翻面
       setTimeout(() => this.showCongrats(), 400);
